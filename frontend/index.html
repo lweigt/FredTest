@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVM-System – KI-Immobilienbewertung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f2efe8;
+  --border: #e2ddd4;
+  --border2: #ccc8bc;
+  --text: #1a1814;
+  --text2: #6b6458;
+  --text3: #9b9287;
+  --accent: #2c4a3e;
+  --accent-light: #e8f0ec;
+  --accent2: #8b5e3c;
+  --mono: 'DM Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'Instrument Sans', sans-serif;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;min-height:100vh}
+
+/* ── HEADER ── */
+header{background:var(--accent);color:#fff;padding:0 2rem}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:32px;height:32px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px}
+.logo-text{font-family:var(--serif);font-size:18px;letter-spacing:.3px}
+.logo-sub{font-size:11px;opacity:.55;font-family:var(--mono);letter-spacing:.5px;margin-top:1px}
+.header-badge{font-family:var(--mono);font-size:10px;padding:3px 10px;border:1px solid rgba(255,255,255,.2);border-radius:20px;opacity:.7;letter-spacing:.5px}
+
+/* ── LAYOUT ── */
+.main{max-width:1200px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:380px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.main{grid-template-columns:1fr;padding:1rem}}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.card-head{padding:1.1rem 1.35rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.card-title{font-size:13px;font-weight:600;letter-spacing:.3px}
+.card-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:auto}
+.card-body{padding:1.35rem}
+
+/* ── FORM ── */
+.form-section{margin-bottom:1.1rem}
+.form-section-title{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:.6rem;font-family:var(--mono)}
+.field{margin-bottom:.75rem}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.field select,.field input[type=number],.field input[type=text]{width:100%;padding:7px 10px;font-size:13px;font-family:var(--sans);border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);appearance:none;transition:border .15s}
+.field select:focus,.field input:focus{outline:none;border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.range-wrap{display:flex;align-items:center;gap:8px}
+.range-wrap input[type=range]{flex:1;accent-color:var(--accent)}
+.range-val{font-family:var(--mono);font-size:12px;font-weight:500;min-width:52px;text-align:right;color:var(--accent)}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:6px}
+.cb-item{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:4px 8px;border:1px solid var(--border);border-radius:20px;background:var(--bg);transition:all .15s;user-select:none}
+.cb-item:hover{border-color:var(--accent);background:var(--accent-light)}
+.cb-item input{accent-color:var(--accent);cursor:pointer}
+.cb-item.checked{border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:500}
+.btn-run{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:all .15s;margin-top:.5rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-run:hover{background:#1e3329}
+.btn-run:active{transform:scale(.99)}
+.btn-run.loading{opacity:.7;pointer-events:none}
+
+/* ── RESULTS ── */
+.results-area{}
+.tab-bar{display:flex;gap:4px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--text2);transition:all .15s;font-family:var(--mono);letter-spacing:.3px}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+
+/* ── METRIC CARDS ── */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.2rem}
+.metric{background:var(--surface2);border-radius:var(--radius);padding:.9rem 1rem;text-align:center}
+.metric .m-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase}
+.metric .m-val{font-family:var(--serif);font-size:22px;color:var(--text);margin-top:3px}
+.metric .m-sub{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+
+/* ── VALUE HERO ── */
+.value-hero{background:var(--accent);color:#fff;border-radius:var(--radius-lg);padding:1.5rem 1.75rem;margin-bottom:1.2rem;position:relative;overflow:hidden}
+.value-hero::before{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
+.vh-label{font-size:11px;opacity:.65;font-family:var(--mono);letter-spacing:.6px;text-transform:uppercase}
+.vh-value{font-family:var(--serif);font-size:38px;margin:4px 0 2px;letter-spacing:-.5px}
+.vh-range{font-size:12px;opacity:.6;font-family:var(--mono)}
+.vh-badges{display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap}
+.vh-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.12);font-family:var(--mono);letter-spacing:.4px}
+
+/* ── PRÜF-STEPS ── */
+.pruef-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.step-row{display:flex;align-items:center;gap:10px;padding:.7rem .9rem;border-radius:var(--radius);border:1px solid var(--border)}
+.step-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;font-family:var(--mono)}
+.dot-ok{background:#dcfce7;color:#166534}
+.dot-warn{background:#fef9c3;color:#854d0e}
+.dot-err{background:#fee2e2;color:#991b1b}
+.step-name{font-size:13px;font-weight:500;flex:1}
+.step-detail{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.step-status{font-size:11px;font-weight:600}
+.step-status.ok{color:#16a34a}
+.step-status.err{color:#dc2626}
+
+/* ── FLAGS ── */
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.9rem}
+.flag{font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono)}
+.flag-rot{background:#fee2e2;color:#991b1b}
+.flag-gelb{background:#fef9c3;color:#854d0e}
+.flag-gruen{background:#dcfce7;color:#166534}
+
+/* ── WERTTREIBER BARS ── */
+.driver-list{display:flex;flex-direction:column;gap:10px;margin-bottom:1rem}
+.driver-item .d-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.driver-item .d-name{color:var(--text2)}
+.driver-item .d-val{font-family:var(--mono);font-weight:500}
+.d-val.pos{color:#16a34a}.d-val.neg{color:#dc2626}
+.d-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.d-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.d-fill.pos{background:var(--accent)}
+.d-fill.neg{background:#dc2626}
+
+/* ── BEGRÜNDUNG ── */
+.begruendung{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:1rem 1.1rem;margin-bottom:1rem}
+.begr-label{font-size:10px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.begr-text{font-size:13px;line-height:1.7;color:var(--text)}
+
+/* ── GOVERNANCE ── */
+.gov-box{border-radius:var(--radius-lg);padding:1.25rem 1.4rem;margin-bottom:1rem;border:1.5px solid}
+.gov-gruen{background:#f0fdf4;border-color:#86efac}
+.gov-gelb{background:#fefce8;border-color:#fde047}
+.gov-rot{background:#fff1f2;border-color:#fca5a5}
+.gov-icon{font-size:28px;margin-bottom:.4rem}
+.gov-title{font-size:17px;font-weight:600;margin-bottom:.4rem}
+.gov-gruen .gov-title{color:#15803d}
+.gov-gelb .gov-title{color:#92400e}
+.gov-rot .gov-title{color:#b91c1c}
+.gov-text{font-size:13px;line-height:1.6}
+.gov-gruende{margin-top:.8rem;padding-top:.8rem;border-top:1px solid rgba(0,0,0,.08)}
+.gov-gruende li{font-size:12px;margin-bottom:3px;padding-left:14px;position:relative;color:var(--text2)}
+.gov-gruende li::before{content:'–';position:absolute;left:0;color:var(--text3)}
+.protokoll{background:var(--text);color:#a8ff9a;border-radius:var(--radius);padding:.85rem 1rem;font-family:var(--mono);font-size:11px;line-height:1.8;margin-top:.9rem}
+.prot-line{display:flex;gap:8px}
+.prot-key{opacity:.5;min-width:120px}
+
+/* ── KI ANALYSE ── */
+.ki-block{background:linear-gradient(135deg,#e8f0ec 0%,#f0ede8 100%);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1.1rem 1.3rem;margin-top:1rem}
+.ki-label{font-size:10px;font-family:var(--mono);letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ki-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ki-text{font-size:13px;line-height:1.7;color:var(--text)}
+
+/* ── ARCHITEKTUR ── */
+.arch-flow{display:grid;gap:8px}
+.arch-node{display:flex;gap:12px;align-items:flex-start;padding:.85rem 1rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.arch-badge{width:28px;height:28px;border-radius:6px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.arch-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.arch-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.arch-arrow{text-align:center;color:var(--text3);font-size:14px;padding:2px 0}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:3rem 1.5rem;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:.75rem;opacity:.5}
+.empty-text{font-size:13px;font-family:var(--mono);letter-spacing:.3px}
+
+/* ── LOADING ── */
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-run.loading .spinner{display:block}
+.btn-run.loading .btn-text{opacity:.7}
+
+/* ── API NOTICE ── */
+.api-notice{background:#fef9c3;border:1px solid #fde047;border-radius:var(--radius);padding:.7rem 1rem;margin-bottom:1rem;font-size:12px;color:#854d0e;font-family:var(--mono);display:none}
+.api-notice.show{display:block}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:1.5rem;font-size:11px;color:var(--text3);font-family:var(--mono);border-top:1px solid var(--border);margin-top:1rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">AVM</div>
+      <div>
+        <div class="logo-text">KI-Bewertungssystem</div>
+        <div class="logo-sub">Wohnimmobilien · Deutschland</div>
+      </div>
+    </div>
+    <div class="header-badge">v1.0 · Prototyp</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── LINKE SPALTE: EINGABE ── -->
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">①</div>
+        <div class="card-title">Objekteingabe</div>
+        <div class="card-sub">ImmoWertV</div>
+      </div>
+      <div class="card-body">
+
+        <div id="api-notice" class="api-notice">
+          Kein API-Key gesetzt – Erklärungsmodul läuft regelbasiert (ohne Claude).
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Grunddaten</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Objekttyp</label>
+              <select id="objekttyp">
+                <option value="etw">Eigentumswohnung</option>
+                <option value="einfh">Einfamilienhaus</option>
+                <option value="doppelh">Doppelhaushälfte</option>
+                <option value="reihenh">Reihenhaus</option>
+                <option value="mfh">Mehrfamilienhaus</option>
+                <option value="denkmal">Denkmalschutzobjekt</option>
+                <option value="sonder">Sonderobjekt</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Markt</label>
+              <select id="markt">
+                <option value="gross">Großstadt</option>
+                <option value="mittel">Mittelstadt</option>
+                <option value="land">Ländlich</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Wohnfläche (m²)</label>
+            <div class="range-wrap">
+              <input type="range" id="flaeche" min="20" max="500" value="85" oninput="setVal('fl-out',this.value+' m²')">
+              <span class="range-val" id="fl-out">85 m²</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Baujahr</label>
+            <div class="range-wrap">
+              <input type="range" id="baujahr" min="1850" max="2024" value="1985" oninput="setVal('bj-out',this.value)">
+              <span class="range-val" id="bj-out">1985</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Zimmer</label>
+            <div class="range-wrap">
+              <input type="range" id="zimmer" min="1" max="12" value="3" oninput="setVal('zi-out',this.value)">
+              <span class="range-val" id="zi-out">3</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Qualität & Lage</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Lageklasse</label>
+              <select id="lage">
+                <option value="1a">1a – Sehr gut</option>
+                <option value="1b" selected>1b – Gut</option>
+                <option value="2">2 – Mittel</option>
+                <option value="3">3 – Einfach</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Zustand</label>
+              <select id="zustand">
+                <option value="neuwertig">Neuwertig / saniert</option>
+                <option value="gut" selected>Gut gepflegt</option>
+                <option value="mittel">Renovierungsbedürftig</option>
+                <option value="schlecht">Stark sanierungsbedürftig</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Ausstattung</label>
+              <select id="ausstattung">
+                <option value="hoch">Gehoben</option>
+                <option value="mittel" selected>Mittel</option>
+                <option value="einfach">Einfach</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Energieklasse</label>
+              <select id="energieklasse">
+                <option value="">Unbekannt</option>
+                <option value="A+">A+</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C" selected>C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="H">H</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid3">
+            <div class="field">
+              <label>Etage</label>
+              <input type="number" id="etage" value="2" min="0" max="30">
+            </div>
+            <div class="field">
+              <label>Ort (optional)</label>
+              <input type="text" id="ort" placeholder="z. B. Köln">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Ausstattungsmerkmale</div>
+          <div class="checkbox-group" id="ausstattung-cbs">
+            <label class="cb-item" data-id="aufzug"><input type="checkbox" id="aufzug"> Aufzug</label>
+            <label class="cb-item" data-id="balkon"><input type="checkbox" id="balkon"> Balkon/Terrasse</label>
+            <label class="cb-item" data-id="keller"><input type="checkbox" id="keller"> Keller</label>
+            <label class="cb-item" data-id="garage"><input type="checkbox" id="garage"> Garage/Stellplatz</label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Besonderheiten & Risiken</div>
+          <div class="checkbox-group" id="bes-cbs">
+            <label class="cb-item" data-id="erbbau"><input type="checkbox" id="bes_erbbau"> Erbbaurecht</label>
+            <label class="cb-item" data-id="mieter"><input type="checkbox" id="bes_mieter"> Vermietet</label>
+            <label class="cb-item" data-id="altlast"><input type="checkbox" id="bes_altlast"> Altlasten</label>
+            <label class="cb-item" data-id="mikrolage"><input type="checkbox" id="bes_mikrolage"> Besondere Mikrolage</label>
+            <label class="cb-item" data-id="datenschwach"><input type="checkbox" id="bes_datenschwach"> Schwache Datenlage</label>
+            <label class="cb-item" data-id="denkmal_auflagen"><input type="checkbox" id="bes_denkmal"> Denkmalauflagen</label>
+            <label class="cb-item" data-id="rechtliche_belastung"><input type="checkbox" id="bes_recht"> Rechtliche Belastung</label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Backend-URL</div>
+          <div class="field">
+            <input type="text" id="backend-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+          </div>
+        </div>
+
+        <button class="btn-run" onclick="runBewertung()">
+          <div class="spinner"></div>
+          <span class="btn-text">Bewertung starten</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RECHTE SPALTE: ERGEBNISSE ── -->
+  <div class="results-area">
+
+    <div id="empty-state" class="card" style="margin-bottom:0">
+      <div class="empty">
+        <div class="empty-icon">◎</div>
+        <div class="empty-text">Objektdaten eingeben und Bewertung starten</div>
+      </div>
+    </div>
+
+    <div id="results-wrapper" style="display:none">
+
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('basis',this)">① Basismodul</button>
+        <button class="tab" onclick="switchTab('human',this)">② Human-Analogue</button>
+        <button class="tab" onclick="switchTab('xai',this)">③ Erklärung (XAI)</button>
+        <button class="tab" onclick="switchTab('gov',this)">④ Governance</button>
+        <button class="tab" onclick="switchTab('arch',this)">Architektur</button>
+      </div>
+
+      <!-- PANEL BASIS -->
+      <div id="panel-basis" class="panel active">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-num">1</div>
+            <div class="card-title">KI-gestützte Marktwertschätzung</div>
+            <div class="card-sub">Hedonic Pricing</div>
+          </div>
+          <div class="card-body">
+            <div id="value-hero"></div>
+            <div id="metrics-grid"></div>
+            <div id="ki-block-basis"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL HUMAN -->
+      <div id="panel-human" class="panel">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-num">2</div>
+            <div class="card-title">Human-Analogue-Modul</div>
+            <div class="card-sub">Sachverständige Heuristiken</div>
+          </div>
+          <div class="card-body" id="human-body"></div>
+        </div>
+      </div>
+
+      <!-- PANEL XAI -->
+      <div id="panel-xai" class="panel">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-num">3</div>
+            <div class="card-title">Erklärungsmodul (XAI)</div>
+            <div class="card-sub">Werttreiber & Begründung</div>
+          </div>
+          <div class="card-body" id="xai-body"></div>
+        </div>
+      </div>
+
+      <!-- PANEL GOVERNANCE -->
+      <div id="panel-gov" class="panel">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-num">4+5</div>
+            <div class="card-title">Sonderfall & Governance</div>
+            <div class="card-sub">Eskalationslogik</div>
+          </div>
+          <div class="card-body" id="gov-body"></div>
+        </div>
+      </div>
+
+      <!-- PANEL ARCHITEKTUR -->
+      <div id="panel-arch" class="panel">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-num">∑</div>
+            <div class="card-title">Systemarchitektur</div>
+            <div class="card-sub">5-Modul-Modell</div>
+          </div>
+          <div class="card-body">
+            <div class="arch-flow">
+              <div class="arch-node"><div class="arch-badge">M1</div><div><div class="arch-name">Basismodul</div><div class="arch-desc">KI-gestützte Marktwertschätzung (Hedonic Pricing). Verarbeitet Objekt- und Marktdaten, berechnet Konfidenzintervall.</div></div></div>
+              <div class="arch-arrow">↓</div>
+              <div class="arch-node"><div class="arch-badge">M2</div><div><div class="arch-name">Human-Analogue-Modul</div><div class="arch-desc">Formalisierte sachverständige Heuristiken: Plausibilitätsprüfung, Kohärenzprüfung, Marktgängigkeit, Sondermerkmal-Erkennung.</div></div></div>
+              <div class="arch-arrow">↓</div>
+              <div class="arch-node"><div class="arch-badge">M3</div><div><div class="arch-name">Erklärungsmodul (XAI)</div><div class="arch-desc">SHAP-analoge Werttreiber-Zerlegung + Claude-generierte Textbegründung. Erhöht Nachvollziehbarkeit gegenüber Black-Box-Modellen.</div></div></div>
+              <div class="arch-arrow">↓</div>
+              <div class="arch-node"><div class="arch-badge">M4</div><div><div class="arch-name">Sonderfall-Modul</div><div class="arch-desc">Kennzeichnung von Objekten mit erhöhter Unsicherheit: Erbbaurecht, Altlasten, Denkmalschutz, schwache Datenlage, Mikrolage.</div></div></div>
+              <div class="arch-arrow">↓</div>
+              <div class="arch-node"><div class="arch-badge">M5</div><div><div class="arch-name">Governance-Modul</div><div class="arch-desc">Eskalationslogik Grün / Gelb / Rot. Automatische Freigabe ↔ Orientierungswert ↔ Zwingende Sachverständigenprüfung (§ 194 BauGB). Protokollierung.</div></div></div>
+            </div>
+            <div style="margin-top:1rem;padding:1rem;background:var(--surface2);border-radius:var(--radius);font-size:12px;color:var(--text2);font-style:italic;border-left:3px solid var(--accent)">
+              „Das System soll nicht menschlich sein, sondern menschliches Bewertungswissen in regelhafte, erklärbare und überprüfbare Entscheidungslogiken übersetzen." – Kraus (2026)
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>AVM-System v1.0 · Bachelorarbeit Friedrich Kraus · Prototyp – nicht für rechtsverbindliche Bewertungen geeignet</footer>
+
+<script>
+const API = () => document.getElementById('backend-url').value.replace(/\/$/, '');
+
+function setVal(id, v) { document.getElementById(id).textContent = v; }
+
+function fmt(n) { return Math.round(n).toLocaleString('de-DE'); }
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+// Checkbox styling
+document.querySelectorAll('.cb-item input').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.cb-item').classList.toggle('checked', cb.checked);
+  });
+});
+
+function getInput() {
+  const bes = [];
+  if (document.getElementById('bes_erbbau').checked) bes.push('erbbau');
+  if (document.getElementById('bes_mieter').checked) bes.push('mieter');
+  if (document.getElementById('bes_altlast').checked) bes.push('altlast');
+  if (document.getElementById('bes_mikrolage').checked) bes.push('mikrolage');
+  if (document.getElementById('bes_datenschwach').checked) bes.push('datenschwach');
+  if (document.getElementById('bes_denkmal').checked) bes.push('denkmal_auflagen');
+  if (document.getElementById('bes_recht').checked) bes.push('rechtliche_belastung');
+
+  const ek = document.getElementById('energieklasse').value;
+  const ort = document.getElementById('ort').value;
+  return {
+    flaeche: +document.getElementById('flaeche').value,
+    baujahr: +document.getElementById('baujahr').value,
+    lage: document.getElementById('lage').value,
+    zustand: document.getElementById('zustand').value,
+    ausstattung: document.getElementById('ausstattung').value,
+    objekttyp: document.getElementById('objekttyp').value,
+    markt: document.getElementById('markt').value,
+    zimmer: +document.getElementById('zimmer').value,
+    etage: +document.getElementById('etage').value,
+    aufzug: document.getElementById('aufzug').checked,
+    balkon: document.getElementById('balkon').checked,
+    keller: document.getElementById('keller').checked,
+    garage: document.getElementById('garage').checked,
+    energieklasse: ek || null,
+    besonderheiten: bes,
+    ort: ort || null,
+  };
+}
+
+async function runBewertung() {
+  const btn = document.querySelector('.btn-run');
+  btn.classList.add('loading');
+  try {
+    const inp = getInput();
+    const res = await fetch(API() + '/api/bewertung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inp)
+    });
+    if (!res.ok) throw new Error('Backend-Fehler: ' + res.status);
+    const data = await res.json();
+    renderAll(data);
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('results-wrapper').style.display = 'block';
+    switchTabDirect('basis');
+  } catch (e) {
+    alert('Fehler: ' + e.message + '\n\nBackend läuft? URL korrekt?');
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function switchTabDirect(id) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const ids = ['basis', 'human', 'xai', 'gov', 'arch'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+function renderAll(d) {
+  renderBasis(d.basis, d.ki_analyse);
+  renderHuman(d.human_analogue);
+  renderXAI(d.xai);
+  renderGov(d.governance);
+}
+
+function renderBasis(b, ki) {
+  const w = fmt(b.marktwert);
+  const hero = document.getElementById('value-hero');
+  hero.innerHTML = `
+    <div class="value-hero">
+      <div class="vh-label">Geschätzter Marktwert</div>
+      <div class="vh-value">€ ${w}</div>
+      <div class="vh-range">Spanne: ${fmt(b.marktwert_min)} – ${fmt(b.marktwert_max)} €</div>
+      <div class="vh-badges">
+        <span class="vh-badge">∅ ${fmt(b.qm_preis)} €/m²</span>
+        <span class="vh-badge">Konfidenz ${Math.round(b.konfidenz * 100)}%</span>
+      </div>
+    </div>`;
+
+  const metrics = document.getElementById('metrics-grid');
+  const alter = 2024 - (getInput().baujahr || 1985);
+  metrics.innerHTML = `
+    <div class="metrics">
+      <div class="metric"><div class="m-label">Marktwert</div><div class="m-val">${w} €</div><div class="m-sub">Punktschätzung</div></div>
+      <div class="metric"><div class="m-label">Preis / m²</div><div class="m-val">${fmt(b.qm_preis)} €</div><div class="m-sub">Vergleichswert</div></div>
+      <div class="metric"><div class="m-label">Konfidenz</div><div class="m-val">${Math.round(b.konfidenz * 100)}%</div><div class="m-sub">Modell-Score</div></div>
+    </div>`;
+
+  if (ki) {
+    document.getElementById('ki-block-basis').innerHTML = `
+      <div class="ki-block">
+        <div class="ki-label"><span class="ki-dot"></span>Claude – KI-Gesamtanalyse</div>
+        <div class="ki-text">${ki}</div>
+      </div>`;
+  }
+}
+
+function renderHuman(h) {
+  const el = document.getElementById('human-body');
+  const flagHtml = h.flags.length
+    ? h.flags.map(f => `<span class="flag flag-${f.stufe}">${f.text}</span>`).join('')
+    : '<span class="flag flag-gruen">Keine Auffälligkeiten</span>';
+
+  const stepsHtml = h.pruefschritte.map(s => {
+    const cls = s.ok ? 'dot-ok' : (s.kuerzel === 'S' ? 'dot-warn' : 'dot-err');
+    return `<div class="step-row">
+      <div class="step-dot ${cls}">${s.kuerzel}</div>
+      <div class="step-name">${s.name}</div>
+      <div style="flex:1"></div>
+      <div class="step-detail">${s.detail}</div>
+      <div class="step-status ${s.ok ? 'ok' : 'err'}" style="margin-left:10px">${s.ok ? '✓' : '✗'}</div>
+    </div>`;
+  }).join('');
+
+  const riskColor = h.risiko_score < 20 ? '#16a34a' : h.risiko_score < 50 ? '#d97706' : '#dc2626';
+  el.innerHTML = `
+    <p style="font-size:11px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:.7rem">Prüfschritte</p>
+    <div class="pruef-steps">${stepsHtml}</div>
+    <p style="font-size:11px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:.9rem 0 .5rem">Erkannte Besonderheiten</p>
+    <div class="flags">${flagHtml}</div>
+    <p style="font-size:11px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:.9rem 0 .4rem">Risiko-Score</p>
+    <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:4px">
+      <div style="height:100%;width:${h.risiko_score}%;background:${riskColor};border-radius:4px;transition:width .5s"></div>
+    </div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text3)">${h.risiko_score}/100 – ${h.risiko_score < 20 ? 'Geringes Risiko' : h.risiko_score < 50 ? 'Erhöhtes Risiko' : 'Hohes Risiko'}</div>`;
+}
+
+function renderXAI(x) {
+  const el = document.getElementById('xai-body');
+  const barsHtml = x.werttreiber.map(t => {
+    const pct = Math.min(100, Math.abs(t.effekt) * 2.5);
+    const pos = t.effekt >= 0;
+    return `<div class="driver-item">
+      <div class="d-head">
+        <span class="d-name">${t.name}</span>
+        <span class="d-val ${pos ? 'pos' : 'neg'}">${t.effekt > 0 ? '+' : ''}${t.effekt}%</span>
+      </div>
+      <div class="d-bar"><div class="d-fill ${pos ? 'pos' : 'neg'}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <p style="font-size:11px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem">Werttreiber-Analyse (relativ zum Marktdurchschnitt)</p>
+    <div class="driver-list">${barsHtml}</div>
+    <div class="begruendung">
+      <div class="begr-label">Sachverständige Begründung</div>
+      <div class="begr-text">${x.begruendung}</div>
+    </div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text3)">Methodik: ${x.methodik}</div>`;
+}
+
+function renderGov(g) {
+  const el = document.getElementById('gov-body');
+  const cls = { gruen: 'gov-gruen', gelb: 'gov-gelb', rot: 'gov-rot' }[g.stufe];
+  const icons = { gruen: '✓', gelb: '!', rot: '✗' };
+  const gruendeHtml = g.gruende.map(gr => `<li>${gr}</li>`).join('');
+  const prot = g.protokoll;
+
+  el.innerHTML = `
+    <div class="gov-box ${cls}">
+      <div class="gov-icon">${icons[g.stufe]}</div>
+      <div class="gov-title">${g.titel}</div>
+      <div class="gov-text">${g.empfehlung}</div>
+      <div class="gov-gruende"><ul>${gruendeHtml}</ul></div>
+    </div>
+    <p style="font-size:11px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:.9rem 0 .5rem">Prüfprotokoll</p>
+    <div class="protokoll">
+      <div class="prot-line"><span class="prot-key">Zeitstempel</span><span>${prot.zeitstempel}</span></div>
+      <div class="prot-line"><span class="prot-key">Stufe</span><span>${prot.stufe}</span></div>
+      <div class="prot-line"><span class="prot-key">Marktwert</span><span>${fmt(prot.marktwert)} €</span></div>
+      <div class="prot-line"><span class="prot-key">Konfidenz</span><span>${prot.konfidenz_pct}%</span></div>
+      <div class="prot-line"><span class="prot-key">Risiko-Score</span><span>${prot.risiko_score}/100</span></div>
+      <div class="prot-line"><span class="prot-key">Modell</span><span>${prot.modell}</span></div>
+    </div>`;
+}
+</script>
+</body>
+</html>
