@@ -231,7 +231,7 @@ async def modul_xai(inp: ObjektInput, basis: ModulErgebnis, human: HumanAnalogue
     lage_text = {"1a": "sehr guter", "1b": "guter", "2": "mittlerer", "3": "einfacher"}.get(inp.lage, "")
  
     fallback = XAIErgebnis(
-        treiber=treiber,
+        werttreiber=treiber,
         begruendung=(
             f"Das Objekt ({inp.objekttyp.upper()}, {inp.flaeche} m², Baujahr {inp.baujahr}) befindet sich "
             f"in {lage_text} Lage im {inp.markt}städtischen Markt. "
@@ -275,7 +275,7 @@ Antworte nur mit der Begründung, ohne Überschrift oder Einleitung."""
             messages=[{"role": "user", "content": prompt}]
         )
         return XAIErgebnis(
-            treiber=treiber,
+            werttreiber=treiber,
             begruendung=message.content[0].text.strip(),
             methodik="Hybride Analyse: Hedonic Pricing + Claude Sonnet (Erklärungsmodul)"
         )
